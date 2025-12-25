@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeoBase Database Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+        }
+
+        .btn-info {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #2563eb;
+        }
+
+        .output-box {
+            background: #1e293b;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .output-box.visible {
+            display: block;
+        }
+
+        .output-box.error {
+            color: #ef4444;
+        }
+
+        .status {
+            padding: 8px 12px;
+            border-radius: 6px;
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status.info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.6s linear infinite;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .connections-list {
+            margin-top: 20px;
+        }
+
+        .connection-item {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .connection-item h4 {
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .connection-item p {
+            margin: 4px 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .connection-item code {
+            background: #e5e7eb;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .info-box {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-box h3 {
+            color: #1e40af;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .info-box p {
+            color: #1e3a8a;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 NeoBase Database Manager</h1>
+            <p>Manage PostgreSQL databases on remote Ubuntu servers</p>
+        </div>
+
+        <!-- Server Configuration -->
+        <div class="card">
+            <h2>📡 Server Configuration</h2>
+            <div class="info-box">
+                <h3>Setup Instructions</h3>
+                <p>1. Make sure you have SSH key-based authentication set up with your Ubuntu server<br>
+                2. Enter your server credentials below<br>
+                3. Test the connection first, then run the initial setup</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="serverUser">Server Username</label>
+                <input type="text" id="serverUser" placeholder="ubuntu" value="ubuntu">
+            </div>
+            
+            <div class="form-group">
+                <label for="serverIp">Server IP Address</label>
+                <input type="text" id="serverIp" placeholder="192.168.1.100">
+            </div>
+
+            <div class="button-group">
+                <button class="btn-info" onclick="testConnection()">Test Connection</button>
+                <button class="btn-primary" onclick="deploySetup()">Deploy & Setup Server</button>
+            </div>
+
+            <div id="serverOutput" class="output-box"></div>
+        </div>
+
+        <!-- Database Operations -->
+        <div class="grid">
+            <!-- Create Database -->
+            <div class="card">
+                <h2>➕ Create Database</h2>
+                
+                <div class="form-group">
+                    <label for="createUserId">User ID</label>
+                    <input type="text" id="createUserId" placeholder="user123">
+                </div>
+                
+                <div class="form-group">
+                    <label for="createDbName">Database Name</label>
+                    <input type="text" id="createDbName" placeholder="myapp_db">
+                </div>
+
+                <button class="btn-success" onclick="createDatabase()">Create Database</button>
+
+                <div id="createOutput" class="output-box"></div>
+            </div>
+
+            <!-- Delete Database -->
+            <div class="card">
+                <h2>🗑️ Delete Database</h2>
+                
+                <div class="form-group">
+                    <label for="deleteUserId">User ID</label>
+                    <input type="text" id="deleteUserId" placeholder="user123">
+                </div>
+
+                <button class="btn-danger" onclick="deleteDatabase()">Delete Database</button>
+
+                <div id="deleteOutput" class="output-box"></div>
+            </div>
+        </div>
+
+        <!-- List & Backup -->
+        <div class="grid">
+            <!-- List Databases -->
+            <div class="card">
+                <h2>📋 List Databases</h2>
+                <button class="btn-info" onclick="listDatabases()">List All Databases</button>
+                <div id="listOutput" class="output-box"></div>
+            </div>
+
+            <!-- Backup Database -->
+            <div class="card">
+                <h2>💾 Backup Database</h2>
+                
+                <div class="form-group">
+                    <label for="backupUserId">User ID</label>
+                    <input type="text" id="backupUserId" placeholder="user123">
+                </div>
+
+                <button class="btn-warning" onclick="backupDatabase()">Create Backup</button>
+
+                <div id="backupOutput" class="output-box"></div>
+            </div>
+        </div>
+
+        <!-- Saved Connections -->
+        <div class="card">
+            <h2>🔌 Saved Connections</h2>
+            <button class="btn-info" onclick="loadConnections()">Refresh Connections</button>
+            <div id="connectionsList" class="connections-list"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+
+        function getServerConfig() {
+            return {
+                serverUser: document.getElementById('serverUser').value,
+                serverIp: document.getElementById('serverIp').value
+            };
+        }
+
+        function showOutput(elementId, message, isError = false) {
+            const output = document.getElementById(elementId);
+            output.textContent = message;
+            output.className = 'output-box visible' + (isError ? ' error' : '');
+        }
+
+        function setButtonLoading(button, loading) {
+            if (loading) {
+                button.disabled = true;
+                button.innerHTML = button.innerHTML + '<span class="loading"></span>';
+            } else {
+                button.disabled = false;
+                button.innerHTML = button.innerHTML.replace(/<span class="loading"><\/span>/, '');
+            }
+        }
+
+        async function testConnection() {
+            const config = getServerConfig();
+            const button = event.target;
+            setButtonLoading(button, true);
+
+            try {
+                const response = await fetch(`${API_URL}/test-connection`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showOutput('serverOutput', '✓ Connection successful! Server is reachable.');
+                } else {
+                    showOutput('serverOutput', '✗ Connection failed: ' + data.message, true);
+                }
+            } catch (error) {
+                showOutput('serverOutput', '✗ Error: ' + error.message, true);
+            } finally {
+                setButtonLoading(button, false);
+            }
+        }
+
+        async function deploySetup() {
+            const config = getServerConfig();
+            const button = event.target;
+            setButtonLoading(button, true);
+            
+            showOutput('serverOutput', 'Deploying to server... This may take several minutes.\n\n');
+
+            try {
+                const response = await fetch(`${API_URL}/deploy-setup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showOutput('serverOutput', '✓ Setup complete!\n\n' + data.output);
+                } else {
+                    showOutput('serverOutput', '✗ Setup failed:\n\n' + (data.output || data.error), true);
+                }
+            } catch (error) {
+                showOutput('serverOutput', '✗ Error: ' + error.message, true);
+            } finally {
+                setButtonLoading(button, false);
+            }
+        }
+
+        async function createDatabase() {
+            const config = getServerConfig();
+            const userId = document.getElementById('createUserId').value;
+            const dbName = document.getElementById('createDbName').value;
+            const button = event.target;
+
+            if (!userId || !dbName) {
+                showOutput('createOutput', '✗ Please enter both User ID and Database Name', true);
+                return;
+            }
+
+            setButtonLoading(button, true);
+            showOutput('createOutput', 'Creating database...\n\n');
+
+            try {
+                const response = await fetch(`${API_URL}/create-database`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...config, userId, dbName })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    let output = '✓ Database created successfully!\n\n' + data.output;
+                    
+                    if (data.connection) {
+                        output += '\n\n=== CONNECTION DETAILS ===\n';
+                        output += `User ID: ${data.connection.user_id}\n`;
+                        output += `Database: ${data.connection.database}\n`;
+                        output += `Username: ${data.connection.username}\n`;
+                        output += `Password: ${data.connection.password}\n`;
+                        output += `Port: ${data.connection.port}\n`;
+                        output += `\nConnection String:\n${data.connection.connection_string}\n`;
+                        output += `\n⚠️  Save these credentials securely!`;
+                    }
+                    
+                    showOutput('createOutput', output);
+                    loadConnections();
+                } else {
+                    showOutput('createOutput', '✗ Database creation failed:\n\n' + (data.output || data.error), true);
+                }
+            } catch (error) {
+                showOutput('createOutput', '✗ Error: ' + error.message, true);
+            } finally {
+                setButtonLoading(button, false);
+            }
+        }
+
+        async function deleteDatabase() {
+            const config = getServerConfig();
+            const userId = document.getElementById('deleteUserId').value;
+            const button = event.target;
+
+            if (!userId) {
+                showOutput('deleteOutput', '✗ Please enter User ID', true);
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to delete the database for user ${userId}? This cannot be undone!`)) {
+                return;
+            }
+
+            setButtonLoading(button, true);
+            showOutput('deleteOutput', 'Deleting database...\n\n');
+
+            try {
+                const response = await fetch(`${API_URL}/delete-database`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...config, userId })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showOutput('deleteOutput', '✓ Database deleted successfully!\n\n' + data.output);
+                    loadConnections();
+                } else {
+                    showOutput('deleteOutput', '✗ Deletion failed:\n\n' + (data.output || data.error), true);
+                }
+            } catch (error) {
+                showOutput('deleteOutput', '✗ Error: ' + error.message, true);
+            } finally {
+                setButtonLoading(button, false);
+            }
+        }
+
+        async function listDatabases() {
+            const config = getServerConfig();
+            const button = event.target;
+            setButtonLoading(button, true);
+            
+            showOutput('listOutput', 'Fetching database list...\n\n');
+
+            try {
+                const response = await fetch(`${API_URL}/list-databases`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showOutput('listOutput', data.output);
+                } else {
+                    showOutput('listOutput', '✗ Failed to list databases:\n\n' + (data.output || data.error), true);
+                }
+            } catch (error) {
+                showOutput('listOutput', '✗ Error: ' + error.message, true);
+            } finally {
+                setButtonLoading(button, false);
+            }
+        }
+
+        async function backupDatabase() {
+            const config = getServerConfig();
+            const userId = document.getElementById('backupUserId').value;
+            const button = event.target;
+
+            if (!userId) {
+                showOutput('backupOutput', '✗ Please enter User ID', true);
+                return;
+            }
+
+            setButtonLoading(button, true);
+            showOutput('backupOutput', 'Creating backup...\n\n');
+
+            try {
+                const response = await fetch(`${API_URL}/backup-database`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...config, userId })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showOutput('backupOutput', '✓ Backup completed!\n\n' + data.output);
+                } else {
+                    showOutput('backupOutput', '✗ Backup failed:\n\n' + (data.output || data.error), true);
+                }
+            } catch (error) {
+                showOutput('backupOutput', '✗ Error: ' + error.message, true);
+            } finally {
+                setButtonLoading(button, false);
+            }
+        }
+
+        async function loadConnections() {
+            try {
+                const response = await fetch(`${API_URL}/connections`);
+                const data = await response.json();
+                
+                const container = document.getElementById('connectionsList');
+                
+                if (data.success && data.connections.length > 0) {
+                    container.innerHTML = data.connections.map(conn => `
+                        <div class="connection-item">
+                            <h4>🔌 ${conn.user_id} @ ${conn.server}</h4>
+                            <p><strong>Database:</strong> ${conn.database}</p>
+                            <p><strong>Port:</strong> ${conn.port}</p>
+                            <p><strong>Connection:</strong> <code>${conn.connection_string}</code></p>
+                            <p><strong>Created:</strong> ${new Date(conn.created_at).toLocaleString()}</p>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<p style="color: #666;">No saved connections yet. Create a database first.</p>';
+                }
+            } catch (error) {
+                document.getElementById('connectionsList').innerHTML = 
+                    '<p style="color: #ef4444;">Error loading connections: ' + error.message + '</p>';
+            }
+        }
+
+        // Load connections on page load
+        window.addEventListener('load', loadConnections);
+    </script>
+</body>
+</html>
