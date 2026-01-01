@@ -358,11 +358,73 @@
             </div>
         </div>
 
+        <!-- Create Database Section -->
+        <div id="createDbCard" class="card" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2 style="margin: 0;">🆕 Create New Database</h2>
+                <button type="button" onclick="toggleCreateDb()" class="btn" style="background: #999; padding: 8px 16px;">Cancel</button>
+            </div>
+            <div id="createDbAlert"></div>
+            
+            <form id="createDbForm">
+                <div class="form-group">
+                    <label>Database Type</label>
+                    <select id="createDbType" required>
+                        <option value="postgres">PostgreSQL</option>
+                        <option value="mysql">MySQL</option>
+                    </select>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Server IP Address</label>
+                        <input type="text" id="createHost" placeholder="192.168.0.221" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Port</label>
+                        <input type="text" id="createPort" value="5432" required>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Admin Username (postgres/root)</label>
+                        <input type="text" id="createAdminUser" placeholder="postgres" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Admin Password</label>
+                        <input type="password" id="createAdminPassword" placeholder="Admin password" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>New Database Name</label>
+                    <input type="text" id="createNewDatabase" placeholder="my_new_db" required>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>New User (optional)</label>
+                        <input type="text" id="createNewUser" placeholder="db_user">
+                    </div>
+                    <div class="form-group">
+                        <label>New User Password (optional)</label>
+                        <input type="password" id="createNewPassword" placeholder="user password">
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn" style="width: 100%; background: #28a745;">🚀 Create Database</button>
+            </form>
+        </div>
+
         <!-- Connection Form -->
         <div id="connectionCard" class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h2 style="margin: 0;">Connect to Database</h2>
-                <button type="button" onclick="toggleBookmarks()" class="btn" style="background: #667eea; padding: 8px 16px;">📚 Bookmarks</button>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" onclick="toggleCreateDb()" class="btn" style="background: #28a745; padding: 8px 16px;">➕ Create DB</button>
+                    <button type="button" onclick="toggleBookmarks()" class="btn" style="background: #667eea; padding: 8px 16px;">📚 Bookmarks</button>
+                </div>
             </div>
             <div id="alertContainer"></div>
             
@@ -569,10 +631,94 @@
             }
         }
 
+        function toggleCreateDb() {
+            const createDbCard = document.getElementById('createDbCard');
+            if (createDbCard.style.display === 'none') {
+                createDbCard.style.display = 'block';
+            } else {
+                createDbCard.style.display = 'none';
+            }
+        }
+
         // Update port when database type changes
         document.getElementById('dbType').addEventListener('change', (e) => {
             const port = e.target.value === 'postgres' ? '5432' : '3306';
             document.getElementById('port').value = port;
+        });
+
+        // Update port when create db type changes
+        document.getElementById('createDbType').addEventListener('change', (e) => {
+            const port = e.target.value === 'postgres' ? '5432' : '3306';
+            document.getElementById('createPort').value = port;
+        });
+
+        // Create database form submit
+        document.getElementById('createDbForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
+            
+            const createDbAlert = document.getElementById('createDbAlert');
+            
+            const payload = {
+                type: document.getElementById('createDbType').value,
+                host: document.getElementById('createHost').value,
+                port: document.getElementById('createPort').value,
+                adminUser: document.getElementById('createAdminUser').value,
+                adminPassword: document.getElementById('createAdminPassword').value,
+                newDatabase: document.getElementById('createNewDatabase').value,
+                newUser: document.getElementById('createNewUser').value,
+                newPassword: document.getElementById('createNewPassword').value
+            };
+            
+            try {
+                const response = await fetch('/api/create-database', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    createDbAlert.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                    
+                    // Auto-fill connection form if user was created
+                    if (payload.newUser && payload.newPassword) {
+                        setTimeout(() => {
+                            document.getElementById('dbType').value = payload.type;
+                            document.getElementById('host').value = payload.host;
+                            document.getElementById('port').value = payload.port;
+                            document.getElementById('database').value = payload.newDatabase;
+                            document.getElementById('user').value = payload.newUser;
+                            document.getElementById('password').value = payload.newPassword;
+                            
+                            toggleCreateDb();
+                            createDbAlert.innerHTML = '';
+                            
+                            showAlert('success', 'Database created! Connection form filled. Click Connect.');
+                        }, 2000);
+                    } else {
+                        setTimeout(() => {
+                            toggleCreateDb();
+                            createDbAlert.innerHTML = '';
+                        }, 3000);
+                    }
+                    
+                    // Reset form
+                    e.target.reset();
+                    document.getElementById('createPort').value = payload.type === 'postgres' ? '5432' : '3306';
+                } else {
+                    createDbAlert.innerHTML = `<div class="alert alert-error">Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                createDbAlert.innerHTML = `<div class="alert alert-error">Error: ${error.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🚀 Create Database';
+            }
         });
 
         // Connection form submit

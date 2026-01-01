@@ -15,6 +15,69 @@ app.use(express.static('public'));
 // Store active connections (in production, use proper session management)
 const connections = new Map();
 
+// Create new database
+app.post('/api/create-database', async (req, res) => {
+  try {
+    const { type, host, port, adminUser, adminPassword, newDatabase, newUser, newPassword } = req.body;
+    
+    if (type === 'postgres') {
+      // Connect to postgres database as admin
+      const adminClient = new PgClient({
+        host,
+        port,
+        user: adminUser,
+        password: adminPassword,
+        database: 'postgres'
+      });
+      
+      await adminClient.connect();
+      
+      // Create database
+      await adminClient.query(`CREATE DATABASE ${newDatabase}`);
+      
+      // Create user if provided
+      if (newUser && newPassword) {
+        await adminClient.query(`CREATE USER ${newUser} WITH PASSWORD '${newPassword}'`);
+        await adminClient.query(`GRANT ALL PRIVILEGES ON DATABASE ${newDatabase} TO ${newUser}`);
+      }
+      
+      await adminClient.end();
+      
+      res.json({ 
+        success: true, 
+        message: `Database '${newDatabase}' created successfully on ${host}` 
+      });
+    } else {
+      // MySQL
+      const adminConnection = await mysql.createConnection({
+        host,
+        port,
+        user: adminUser,
+        password: adminPassword
+      });
+      
+      // Create database
+      await adminConnection.query(`CREATE DATABASE ${newDatabase}`);
+      
+      // Create user if provided
+      if (newUser && newPassword) {
+        await adminConnection.query(`CREATE USER '${newUser}'@'%' IDENTIFIED BY '${newPassword}'`);
+        await adminConnection.query(`GRANT ALL PRIVILEGES ON ${newDatabase}.* TO '${newUser}'@'%'`);
+        await adminConnection.query('FLUSH PRIVILEGES');
+      }
+      
+      await adminConnection.end();
+      
+      res.json({ 
+        success: true, 
+        message: `Database '${newDatabase}' created successfully on ${host}` 
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // PostgreSQL functions
 async function connectPostgres(config) {
   const client = new PgClient({
