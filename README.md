@@ -23,6 +23,7 @@ Programmatic scripts to build and configure SQL databases on Linux servers. Supp
 | `create_schema.py` | Create schemas (Python) | `psycopg2-binary` or `mysql-connector-python` |
 | `read_database.sh` | Query and read data | `psql` or `mysql` client |
 | `read_database.py` | Query data (Python) | `psycopg2-binary` or `mysql-connector-python` |
+| `read_remote_database.sh` | Query remote database by IP | `psql` or `mysql` client |
 
 ---
 
@@ -219,6 +220,38 @@ const res = await client.query('SELECT * FROM users');
 **Connection URL Format:**
 ```
 postgresql://myapp_user:changeme123@localhost:5432/myapp_db
+```
+
+### Connecting from Remote Mac to Linux Server
+ complete setup instructions.
+
+**Quick Remote Query with Script:**
+```bash
+# Install PostgreSQL client on Mac first
+brew install postgresql@15
+
+# Read from remote database (replace with your server IP)
+./read_remote_database.sh 192.168.1.50 postgres --list-tables
+./read_remote_database.sh 192.168.1.50 postgres --describe users
+./read_remote_database.sh 192.168.1.50 postgres --query "SELECT * FROM users LIMIT 10"
+
+# With custom credentials
+DB_NAME=mydb DB_USER=admin DB_PASSWORD=secret123 \
+  ./read_remote_database.sh 192.168.1.50 postgres --list-tables
+
+# Export to CSV
+./read_remote_database.sh 192.168.1.50 postgres --query "SELECT * FROM users" --format csv > users.csv
+```
+
+**Manual Connection:**
+```bash
+# Direct psql connection
+psql -h 192.168.1.50 -p 5432 -U myapp_user -d myapp_db
+
+# Or use SSH tunnel (most secure - recommended)
+ssh -L 5432:localhost:5432 user@192.168.1.50
+ssh -L 5432:localhost:5432 user@your-server-ip
+psql -h localhost -U myapp_user -d myapp_db
 ```
 
 ---
