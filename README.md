@@ -15,15 +15,18 @@ Programmatic scripts to build and configure SQL databases on Linux servers. Supp
 
 ## 📁 Available Scripts
 
+All scripts are located in the `scripts/` directory.
+
 | Script | Purpose | Dependencies |
 |--------|---------|--------------|
-| `setup_database.sh` | Setup database system | `sudo`, `apt-get` |
-| `setup_database.py` | Setup database (Python) | Python 3.6+ |
-| `create_schema.sh` | Create table schemas | `psql` or `mysql` client |
-| `create_schema.py` | Create schemas (Python) | `psycopg2-binary` or `mysql-connector-python` |
-| `read_database.sh` | Query and read data | `psql` or `mysql` client |
-| `read_database.py` | Query data (Python) | `psycopg2-binary` or `mysql-connector-python` |
-| `read_remote_database.sh` | Query remote database by IP | `psql` or `mysql` client |
+| `script./scripts/setup_database.sh` | Setup database system | `sudo`, `apt-get` |
+| `script./scripts/setup_database.py` | Setup database (Python) | Python 3.6+ |
+| `script./scripts/create_schema.sh` | Create table schemas | `psql` or `mysql` client |
+| `script./scripts/create_schema.py` | Create schemas (Python) | `psycopg2-binary` or `mysql-connector-python` |
+| `script./scripts/read_database.sh` | Query and read data | `psql` or `mysql` client |
+| `script./scripts/read_database.py` | Query data (Python) | `psycopg2-binary` or `mysql-connector-python` |
+| `script./scripts/read_remote_database.sh` | Query remote database by IP | `psql` or `mysql` client |
+| `script./scripts/enable_remote_access.sh` | Configure remote access | `sudo`, `systemctl` |
 
 ---
 
@@ -51,13 +54,13 @@ psql --version
 cd /path/to/NeoBase
 
 # Make scripts executable
-chmod +x *.sh *.py
+chmod +x scripts/*.sh scripts/*.py
 
 # Setup PostgreSQL database (automated)
-./setup_database.sh postgres
+./scripts/setup_database.sh postgres
 
 # Or with custom credentials
-DB_NAME=myappdb DB_USER=myuser DB_PASSWORD=SecurePass123 ./setup_database.sh postgres
+DB_NAME=myappdb DB_USER=myuser DB_PASSWORD=SecurePass123 ./scripts/setup_database.sh postgres
 ```
 
 **Output Example:**
@@ -77,10 +80,10 @@ DB_NAME=myappdb DB_USER=myuser DB_PASSWORD=SecurePass123 ./setup_database.sh pos
 **Option A - Use Example Schemas:**
 ```bash
 # Create all example tables (users, posts, comments)
-./create_schema.sh postgres --example users,posts,comments
+./scripts/create_schema.sh postgres --example users,posts,comments
 
 # Or create just one table
-./create_schema.sh postgres --example users
+./scripts/create_schema.sh postgres --example users
 ```
 
 **Option B - Use Custom SQL File:**
@@ -97,37 +100,37 @@ CREATE TABLE IF NOT EXISTS products (
 EOF
 
 # Apply the schema
-./create_schema.sh postgres --schema my_schema.sql
+./scripts/create_schema.sh postgres --schema my_schema.sql
 ```
 
 **Option C - Generate Template:**
 ```bash
 # Generate example schema to customize
-./create_schema.sh postgres --generate-example > my_custom_schema.sql
+./scripts/create_schema.sh postgres --generate-example > my_custom_schema.sql
 
 # Edit the file, then apply it
-./create_schema.sh postgres --schema my_custom_schema.sql
+./scripts/create_schema.sh postgres --schema my_custom_schema.sql
 ```
 
 ### Step 4: Read and Query Database
 
 **List Tables:**
 ```bash
-./read_database.sh postgres --list-tables
+./scripts/read_database.sh postgres --list-tables
 ```
 
 **Describe Table Structure:**
 ```bash
-./read_database.sh postgres --describe users
+./scripts/read_database.sh postgres --describe users
 ```
 
 **Execute Queries:**
 ```bash
 # Simple SELECT
-./read_database.sh postgres --query "SELECT * FROM users LIMIT 10"
+./scripts/read_database.sh postgres --query "SELECT * FROM users LIMIT 10"
 
 # Complex query with JOIN
-./read_database.sh postgres --query "
+./scripts/read_database.sh postgres --query "
 SELECT u.username, COUNT(p.id) as post_count 
 FROM users u 
 LEFT JOIN posts p ON u.id = p.user_id 
@@ -135,20 +138,20 @@ GROUP BY u.username
 "
 
 # Export to CSV
-./read_database.sh postgres --query "SELECT * FROM users" --format csv > users.csv
+./scripts/read_database.sh postgres --query "SELECT * FROM users" --format csv > users.csv
 ```
 
 ### Step 5: Insert Sample Data
 
 ```bash
 # Insert data directly
-./read_database.sh postgres --query "
+./scripts/read_database.sh postgres --query "
 INSERT INTO users (username, email, password_hash, first_name, last_name) 
 VALUES ('johndoe', 'john@example.com', 'hashed_password', 'John', 'Doe')
 "
 
 # Insert multiple rows
-./read_database.sh postgres --query "
+./scripts/read_database.sh postgres --query "
 INSERT INTO users (username, email, password_hash, first_name, last_name) 
 VALUES 
   ('janedoe', 'jane@example.com', 'hashed_pass', 'Jane', 'Doe'),
@@ -156,7 +159,7 @@ VALUES
 "
 
 # Verify insertion
-./read_database.sh postgres --query "SELECT * FROM users"
+./scripts/read_database.sh postgres --query "SELECT * FROM users"
 ```
 
 ### PostgreSQL Manual Commands
@@ -231,16 +234,16 @@ postgresql://myapp_user:changeme123@localhost:5432/myapp_db
 brew install postgresql@15
 
 # Read from remote database (replace with your server IP)
-./read_remote_database.sh 192.168.1.50 postgres --list-tables
-./read_remote_database.sh 192.168.1.50 postgres --describe users
-./read_remote_database.sh 192.168.1.50 postgres --query "SELECT * FROM users LIMIT 10"
+./scripts/read_remote_database.sh 192.168.1.50 postgres --list-tables
+./scripts/read_remote_database.sh 192.168.1.50 postgres --describe users
+./scripts/read_remote_database.sh 192.168.1.50 postgres --query "SELECT * FROM users LIMIT 10"
 
 # With custom credentials
 DB_NAME=mydb DB_USER=admin DB_PASSWORD=secret123 \
-  ./read_remote_database.sh 192.168.1.50 postgres --list-tables
+  ./scripts/read_remote_database.sh 192.168.1.50 postgres --list-tables
 
 # Export to CSV
-./read_remote_database.sh 192.168.1.50 postgres --query "SELECT * FROM users" --format csv > users.csv
+./scripts/read_remote_database.sh 192.168.1.50 postgres --query "SELECT * FROM users" --format csv > users.csv
 ```
 
 **Manual Connection:**
@@ -265,13 +268,13 @@ psql -h localhost -U myapp_user -d myapp_db
 chmod +x setup_database.sh
 
 # Setup PostgreSQL (default)
-./setup_database.sh postgres
+./scripts/setup_database.sh postgres
 
 # Setup MySQL
-./setup_database.sh mysql
+./scripts/setup_database.sh mysql
 
 # With custom environment variables
-DB_NAME=mydb DB_USER=admin DB_PASSWORD=secret123 ./setup_database.sh postgres
+DB_NAME=mydb DB_USER=admin DB_PASSWORD=secret123 ./scripts/setup_database.sh postgres
 ```
 
 ### Python Script
@@ -336,13 +339,13 @@ Both scripts support configuration via environment variables:
 
 ```bash
 # Basic setup
-./setup_database.sh postgres
+./scripts/setup_database.sh postgres
 
 # Custom configuration
 DB_NAME=production_db \
 DB_USER=prod_user \
 DB_PASSWORD=SecurePass123! \
-./setup_database.sh postgres
+./scripts/setup_database.sh postgres
 
 # Output:
 # Connection string: postgresql://prod_user:SecurePass123!@localhost:5432/production_db
@@ -352,7 +355,7 @@ DB_PASSWORD=SecurePass123! \
 
 ```bash
 # Basic setup
-./setup_database.sh mysql
+./scripts/setup_database.sh mysql
 
 # With Python script
 python3 setup_database.py --type mysql --name webapp --user webuser --password WebPass456
@@ -389,7 +392,7 @@ Use these connection strings in your applications to connect to the database.
 ### Permission Denied
 ```bash
 # Ensure scripts are executable
-chmod +x *.sh *.py
+chmod +x scripts/*.sh scripts/*.py
 ```
 
 ### PostgreSQL Connection Issues
@@ -471,7 +474,7 @@ sudo -u postgres psql -c "DROP DATABASE myapp_db;"
 sudo mysql -e "DROP DATABASE myapp_db;"
 
 # Then run setup again
-./setup_database.sh postgres
+./scripts/setup_database.sh postgres
 ```
 
 ## Advanced Usage
@@ -515,16 +518,16 @@ Use [read_database.sh](read_database.sh) to query and read data:
 
 ```bash
 # List all tables
-./read_database.sh postgres --list-tables
+./scripts/read_database.sh postgres --list-tables
 
 # Describe a table structure
-./read_database.sh postgres --describe users
+./scripts/read_database.sh postgres --describe users
 
 # Execute custom query
-./read_database.sh postgres --query "SELECT * FROM users LIMIT 10"
+./scripts/read_database.sh postgres --query "SELECT * FROM users LIMIT 10"
 
 # CSV output
-./read_database.sh mysql --query "SELECT * FROM posts" --format csv
+./scripts/read_database.sh mysql --query "SELECT * FROM posts" --format csv
 ```
 
 ### Python Version
@@ -554,16 +557,16 @@ Use [create_schema.sh](create_schema.sh) to create table schemas:
 
 ```bash
 # Create schema from SQL file
-./create_schema.sh postgres --schema example_schema.sql
+./scripts/create_schema.sh postgres --schema example_schema.sql
 
 # Create built-in example tables (users, posts, comments)
-./create_schema.sh postgres --example users,posts,comments
+./scripts/create_schema.sh postgres --example users,posts,comments
 
 # Generate example schema SQL
-./create_schema.sh mysql --generate-example > my_schema.sql
+./scripts/create_schema.sh mysql --generate-example > my_schema.sql
 
 # Single table
-./create_schema.sh postgres --example users
+./scripts/create_schema.sh postgres --example users
 ```
 
 ### Python Version
@@ -592,26 +595,26 @@ The scripts include pre-built schemas for:
 
 ```bash
 # 1. Setup database
-./setup_database.sh postgres
+./scripts/setup_database.sh postgres
 
 # 2. Create tables
-./create_schema.sh postgres --example users,posts,comments
+./scripts/create_schema.sh postgres --example users,posts,comments
 
 # 3. List tables to verify
-./read_database.sh postgres --list-tables
+./scripts/read_database.sh postgres --list-tables
 
 # 4. Describe table structure
-./read_database.sh postgres --describe users
+./scripts/read_database.sh postgres --describe users
 
 # 5. Query data
-./read_database.sh postgres --query "SELECT * FROM users"
+./scripts/read_database.sh postgres --query "SELECT * FROM users"
 ```
 
 ### Using Python Scripts
 
 ```bash
 # 1. Setup database
-./setup_database.sh postgres
+./scripts/setup_database.sh postgres
 
 # 2. Create tables
 python3 create_schema.py --type postgres --example users,posts,comments
